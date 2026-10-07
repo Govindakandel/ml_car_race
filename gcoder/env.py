@@ -122,15 +122,20 @@ class CarWorld:
 
         self.obstacles.clear()
 
-        # Fixed positions for visualization.
-        # Later we can randomize them during reset.
-        positions = [
-            (230, 180),
-            (400, 260),
-            (320, 340),
-            (180, 430),
-            (420, 510),
-        ]
+        # Randomly generate obstacles within the road boundaries and below car .
+        positions = []
+        for _ in range(5):  # Generate 5 obstacles
+                # If collision, try again for a new position
+                while True:
+                    x = random.randint(ROAD_LEFT + OBSTACLE_W // 2, ROAD_RIGHT - OBSTACLE_W // 2)
+                    y = random.randint(self.car.rect.bottom + OBSTACLE_H // 2, ROAD_BOTTOM - OBSTACLE_H // 2)
+                    collision = any(
+                        pygame.Rect(x - OBSTACLE_W // 2, y - OBSTACLE_H // 2, OBSTACLE_W, OBSTACLE_H).colliderect(ob.rect)
+                        for ob in self.obstacles
+                    )
+                    if not collision:
+                        positions.append((x, y))
+                        break
 
         for x, y in positions:
             self.obstacles.append(
@@ -294,12 +299,16 @@ class CarWorld:
                 (WINDOW_WIDTH, WINDOW_HEIGHT)
             ) 
             self.clock = pygame.time.Clock()
+            self.font = pygame.font.Font(None, 36)
 
         # Handle events
         for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                exit()
+            # if q is pressed quit
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_q:
+                    pygame.quit()
+                    print("Quitting the game.")
+                    exit()
 
 
         # Draw road
@@ -335,7 +344,6 @@ class CarWorld:
             )
 
         # text for sensor states
-        font = pygame.font.Font(None, 36)
         sensor_states = self.get_discrete_state()
         sensor_texts = [
             "Left: " + ("CLOSE" if sensor_states[0] == 0 else "FAR"),
@@ -343,7 +351,7 @@ class CarWorld:
             "Right: " + ("CLOSE" if sensor_states[2] == 0 else "FAR"),
         ]
         for i, text in enumerate(sensor_texts):
-            text_surface = font.render(text, True, (255, 255, 255))
+            text_surface = self.font.render(text, True, (255, 255, 255))
             self.window.blit(text_surface, (10, 10 + i * 40))
 
         pygame.display.flip()
