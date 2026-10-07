@@ -22,13 +22,13 @@ CAR_H = 40
 OBSTACLE_W = 30
 OBSTACLE_H = 30
 
-CAR_SPEED_Y = 5
-CAR_SPEED_X = 10
+CAR_SPEED_Y = 15
+CAR_SPEED_X = 20
 
 SENSOR_RANGE = 150
 SENSOR_WIDTH = 80
 
-FPS = 30
+FPS = 2
 
 
 
@@ -118,29 +118,36 @@ class CarWorld:
         self.finished = False
         self.crashed = False
 
+
+
     def spawn_obstacles(self):
 
         self.obstacles.clear()
 
-        # Randomly generate obstacles within the road boundaries and below car .
-        positions = []
-        for _ in range(5):  # Generate 5 obstacles
-                # If collision, try again for a new position
-                while True:
-                    x = random.randint(ROAD_LEFT + OBSTACLE_W // 2, ROAD_RIGHT - OBSTACLE_W // 2)
-                    y = random.randint(self.car.rect.bottom + OBSTACLE_H // 2, ROAD_BOTTOM - OBSTACLE_H // 2)
-                    collision = any(
-                        pygame.Rect(x - OBSTACLE_W // 2, y - OBSTACLE_H // 2, OBSTACLE_W, OBSTACLE_H).colliderect(ob.rect)
-                        for ob in self.obstacles
-                    )
-                    if not collision:
-                        positions.append((x, y))
-                        break
+        for _ in range(5):
 
-        for x, y in positions:
-            self.obstacles.append(
-                Obstacle(x, y)
-            )
+            while True:
+
+                x = random.randint(
+                    ROAD_LEFT + OBSTACLE_W // 2,
+                    ROAD_RIGHT - OBSTACLE_W // 2
+                )
+
+                y = random.randint(
+                    self.car.rect.bottom + OBSTACLE_H // 2,
+                    ROAD_BOTTOM - OBSTACLE_H // 2
+                )
+
+                new_obstacle = Obstacle(x, y)
+
+                collision = any(
+                    new_obstacle.rect.colliderect(ob.rect)
+                    for ob in self.obstacles
+                )
+
+                if not collision:
+                    self.obstacles.append(new_obstacle)
+                    break
 
     # --------------------------------------------------------
     # Sensor geometry
@@ -310,6 +317,8 @@ class CarWorld:
                     print("Quitting the game.")
                     exit()
 
+        # clear the window
+        self.window.fill((0, 0, 0))
 
         # Draw road
         pygame.draw.rect(
@@ -362,5 +371,13 @@ car_world = CarWorld(render_mode="human")
 initial_obs , info = car_world.reset()
 print("Initial Observation:", initial_obs)
 # render the initial state
-while True: 
- car_world.render()
+while True:
+
+    action = random.choice([0, 1, 2])
+
+    observation, reward, finished, crashed, info = car_world.step(action)
+    if finished or crashed:
+        break
+
+    car_world.render()
+
