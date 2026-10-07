@@ -28,7 +28,7 @@ CAR_SPEED_X = 10
 SENSOR_RANGE = 150
 SENSOR_WIDTH = 80
 
-FPS = 60
+FPS = 30
 
 
 
@@ -107,14 +107,14 @@ class Obstacle:
 
 class CarWorld:
 
-    def __init__(self):
+    def __init__(self , render_mode = None):
 
         self.car = Car()
-
         self.obstacles = []
-
+        self.window = None
         self.spawn_obstacles()
-
+        self.render_mode = render_mode
+        self.clock = None
         self.finished = False
         self.crashed = False
 
@@ -226,7 +226,7 @@ class CarWorld:
 
         for distance in distances:
 
-            if distance <= SENSOR_RANGE:
+            if distance <= SENSOR_RANGE // 2:
                 state.append(0)  # CLOSE
             else:
                 state.append(1)  # FAR
@@ -283,7 +283,76 @@ class CarWorld:
         info = {}
         return self.get_discrete_state() , info
 
+    def render(self):
+        
+        if self.render_mode != "human":
+            return 
+
+        if self.window is None:
+            pygame.init()
+            self.window = pygame.display.set_mode(
+                (WINDOW_WIDTH, WINDOW_HEIGHT)
+            ) 
+            self.clock = pygame.time.Clock()
+
+        # Handle events
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                exit()
+
+
+        # Draw road
+        pygame.draw.rect(
+            self.window,
+            (50, 50, 50),
+            (ROAD_LEFT, ROAD_TOP, ROAD_WIDTH, ROAD_HEIGHT)
+        )
+
+        # Draw car
+        pygame.draw.rect(
+            self.window,
+            (0, 255, 0),
+            self.car.rect
+        )
+
+        # Draw obstacles
+        for obstacle in self.obstacles:
+            pygame.draw.rect(
+                self.window,
+                (255, 0, 0),
+                obstacle.rect
+            )
+        
+        # Draw sensors rectangles transparent and seperated by lines 
+        sensor_rects = self.get_sensor_rects()
+        for sensor in sensor_rects:
+            pygame.draw.rect(
+                self.window,
+                (0, 0, 255, 100),
+                sensor,
+                2
+            )
+
+        # text for sensor states
+        font = pygame.font.Font(None, 36)
+        sensor_states = self.get_discrete_state()
+        sensor_texts = [
+            "Left: " + ("CLOSE" if sensor_states[0] == 0 else "FAR"),
+            "Straight: " + ("CLOSE" if sensor_states[1] == 0 else "FAR"),
+            "Right: " + ("CLOSE" if sensor_states[2] == 0 else "FAR"),
+        ]
+        for i, text in enumerate(sensor_texts):
+            text_surface = font.render(text, True, (255, 255, 255))
+            self.window.blit(text_surface, (10, 10 + i * 40))
+
+        pygame.display.flip()
+        self.clock.tick(FPS)
+
 # initialize the car world
-car_world = CarWorld()
+car_world = CarWorld(render_mode="human")
 initial_obs , info = car_world.reset()
 print("Initial Observation:", initial_obs)
+# render the initial state
+while True: 
+ car_world.render()
