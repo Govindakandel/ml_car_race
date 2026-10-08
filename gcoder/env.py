@@ -107,7 +107,7 @@ class Obstacle:
 
 class CarWorld:
 
-    def __init__(self , render_mode = None):
+    def __init__(self , render_mode = None , random_seed = None):
 
         self.car = Car()
         self.obstacles = []
@@ -117,14 +117,18 @@ class CarWorld:
         self.clock = None
         self.finished = False
         self.crashed = False
+        self.random_seed = random_seed
+        if random_seed is not None:
+            random.seed(random_seed)
 
 
 
     def spawn_obstacles(self):
 
+
         self.obstacles.clear()
 
-        for _ in range(5):
+        for _ in range(10):
 
             while True:
 
@@ -148,6 +152,7 @@ class CarWorld:
                 if not collision:
                     self.obstacles.append(new_obstacle)
                     break
+
 
     # --------------------------------------------------------
     # Sensor geometry
@@ -291,7 +296,7 @@ class CarWorld:
         self.finished = False
         self.crashed = False
 
-        self.spawn_obstacles()
+        # self.spawn_obstacles()
         info = {}
         return self.get_discrete_state() , info
 
@@ -366,18 +371,22 @@ class CarWorld:
         pygame.display.flip()
         self.clock.tick(FPS)
 
-# initialize the car world
-car_world = CarWorld(render_mode="human")
-initial_obs , info = car_world.reset()
-print("Initial Observation:", initial_obs)
-# render the initial state
-while True:
 
-    action = random.choice([0, 1, 2])
 
-    observation, reward, finished, crashed, info = car_world.step(action)
-    if finished or crashed:
-        break
 
-    car_world.render()
 
+if __name__ == "__main__":
+        # initialize the car world
+    car_world = CarWorld(render_mode="human")
+    initial_obs , info = car_world.reset()
+    print("Initial Observation:", initial_obs)
+    # render the initial state
+    while True:
+
+        action = random.choice([0, 1, 2])
+
+        observation, reward, finished, crashed, info = car_world.step(action)
+        if finished or crashed:
+            break
+
+        car_world.render()
