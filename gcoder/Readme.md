@@ -135,7 +135,7 @@ After training, both greedy policies (no exploration) drive the car:
 pip install pygame-ce numpy gymnasium
 python sarsa.py       # train + watch the SARSA agent
 python Qlearning.py   # train + watch the Q-learning agent
-python record2.py     # regenerate videos/gifs
+python record.py     # regenerate videos/gifs
 ```
 
 - `env.py` — the CarWorld environment (random agent demo: `python env.py`)
